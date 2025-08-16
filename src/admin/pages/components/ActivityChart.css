@@ -1,0 +1,24 @@
+.chart-wrap { 
+  width: 100%; 
+}
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 6px 0;
+}
+
+.tooltip-item {
+  margin: 2px 0;
+  font-weight: 500;
+}

@@ -1,0 +1,54 @@
+.sidebar {
+  background:#ffffff;
+  border-right:1px solid var(--gray-200);
+  padding:14px 12px;
+  display:flex; flex-direction:column;
+}
+
+.logo-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.1);
+  background: var(--blue);
+}
+
+.brand { display:flex; align-items:center; gap:10px; padding:8px; }
+.logo { width:22px; height:22px; border-radius:50%; background: var(--blue); box-shadow: inset 0 -6px 0 rgba(0,0,0,.1); }
+.brand-text { font-weight:600; }
+
+.nav { margin-top: 14px; display:flex; flex-direction:column; gap:6px; }
+
+.menu-item {
+  width:100%;
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px;
+  border:none; background:transparent; cursor:pointer;
+  border-radius:10px; color:#0f172a; text-align:left;
+}
+.menu-item:hover { background: var(--gray-100); }
+.menu-item.active { background:#e8f1fe; color: var(--blue); border:1px solid #d7e6ff; }
+
+.menu-item .menu-icon { 
+  width: 20px; 
+  height: 20px; 
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+.menu-item.active .menu-icon { 
+  color: var(--blue); 
+}
+.menu-item:hover .menu-icon {
+  color: #475569;
+}
+.menu-item .label { font-size:14px; }
+
+.profile {
+  margin-top:auto; display:flex; align-items:center; gap:10px;
+  padding:10px 12px; background:#fbfcff; border:1px solid var(--gray-200);
+  border-radius:12px;
+}
+.avatar { width:34px; height:34px; border-radius:10px; background:#e6f0ff; color:var(--blue-700); display:grid; place-items:center; font-weight:700; }
+.meta .name { font-size:13px; font-weight:600; }
+.meta .email { font-size:12px; color:#64748b; }
