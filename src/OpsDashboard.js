@@ -16,6 +16,7 @@ export default function OpsDashboard() {
     { name: "KYC Reports", date: "2023-06-21", type: "Excel", folder: "Compliance", status: "Available", isFavorite: false },
     { name: "AML Reports", date: "2023-06-20", type: "PDF", folder: "Compliance", status: "Available", isFavorite: false }
   ]);
+  // eslint-disable-next-line no-unused-vars
   const [recentReports, setRecentReports] = useState(["CIF Data Extract", "Monthly Periodic Review"]);
 
   // Toggle favorites dynamically
