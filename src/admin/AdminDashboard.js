@@ -3,7 +3,7 @@ import React, { useState } from "react";
 // Import useNavigate hook for programmatic navigation between routes
 import { useNavigate } from "react-router-dom";
 // Import modal components for different dashboard actions
-import { AddUserModal, CreateGroupModal } from "./Modals";
+import { AddUserModal, CreateFolderModal } from "./Modals";
 // Import admin-specific CSS styles
 import "./admin.css";
 
@@ -45,45 +45,6 @@ export default function AdminDashboard() {
     console.log('New group created:', groupData); // Log group data for debugging
     // TODO: In a real application, this would make an API call to save group to backend
   };
-
-  // Sample data for recent user activities - shows what users have been doing recently
-  const recentActivities = [
-    {
-      user: { name: "John Smith", initials: "JS" }, // User info with display name and avatar initials
-      action: "Accessed", // What action was performed
-      group: "Branch A → A1", // Which group was affected
-      time: "2 hours ago", // When the action occurred
-      status: "completed" // Current status of the action
-    },
-    {
-      user: { name: "Sarah Johnson", initials: "SJ" },
-      action: "Modified Access",
-      group: "Branch B",
-      time: "3 hours ago",
-      status: "completed"
-    },
-    {
-      user: { name: "Mike Wilson", initials: "MW" },
-      action: "Created Group",
-      group: "Branch C → C2",
-      time: "5 hours ago",
-      status: "completed"
-    },
-    {
-      user: { name: "Emily Brown", initials: "EB" },
-      action: "Updated Profile",
-      group: "User Settings",
-      time: "6 hours ago",
-      status: "completed"
-    },
-    {
-      user: { name: "David Lee", initials: "DL" },
-      action: "Requested Access",
-      group: "Branch A → A2",
-      time: "8 hours ago",
-      status: "pending" // This action is still waiting for approval
-    }
-  ];
 
 
   return (
@@ -176,51 +137,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Content Row */}
-      <div className="row">
-        {/* Recent Activities */}
-        <div className="col-12 mb-4">
-          <div className="recent-activities">
-            <div style={{ padding: '20px', borderBottom: '1px solid #e9ecef' }}>
-              <h6 style={{ margin: 0, fontWeight: '600', color: '#212529' }}>Recent Activities</h6>
-            </div>
-            <div className="table-responsive">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Group/Branch</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentActivities.map((activity, index) => (
-                    <tr key={index}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className="user-avatar">{activity.user.initials}</div>
-                          <span>{activity.user.name}</span>
-                        </div>
-                      </td>
-                      <td>{activity.action}</td>
-                      <td>{activity.group}</td>
-                      <td>{activity.time}</td>
-                      <td>
-                        <span className={`status-badge ${activity.status}`}>
-                          {activity.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-      </div>
 
       {/* Modals */}
       <AddUserModal
@@ -228,13 +144,14 @@ export default function AdminDashboard() {
         onClose={() => setShowAddUserModal(false)}
         onSave={handleSaveUser}
       />
-
-      <CreateGroupModal
+      <CreateFolderModal
         isOpen={showCreateGroupModal}
         onClose={() => setShowCreateGroupModal(false)}
         onSave={handleSaveGroup}
+        title="Create New Folder"
       />
 
     </div>
+
   );
 }
