@@ -94,3 +94,58 @@ export const createSubFolder = async (mainId, subName) => {
   });
   return res.data;
 };
+
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+export default function AccessControl() {
+  const [groups, setGroups] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch groups when page loads or search changes
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        const res = await axios.get("http://localhost:8080/api/groups", {
+          params: { search: searchTerm }
+        });
+        setGroups(res.data);
+      } catch (error) {
+        console.error("Error fetching groups:", error);
+      }
+    };
+    loadGroups();
+  }, [searchTerm]);
+
+  const handleSaveMainFolder = async (name) => {
+    try {
+      await axios.post("http://localhost:8080/api/folders/main", null, {
+        params: { name }
+      });
+      // refresh list after save
+      const res = await axios.get("http://localhost:8080/api/groups");
+      setGroups(res.data);
+    } catch (error) {
+      console.error("Error saving main folder:", error);
+    }
+  };
+
+  const handleSaveSubFolder = async (mainId, subName) => {
+    try {
+      await axios.post("http://localhost:8080/api/folders/sub", null, {
+        params: { mainId, subName }
+      });
+      const res = await axios.get("http://localhost:8080/api/groups");
+      setGroups(res.data);
+    } catch (error) {
+      console.error("Error saving sub folder:", error);
+    }
+  };
+
+  return (
+    <div>
+      {/* your existing JSX with mapped groups */}
+    </div>
+  );
+}
