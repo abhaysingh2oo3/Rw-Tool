@@ -1,48 +1,47 @@
-// Import React library for component creation
-import React from "react";
-// Import React Router components for client-side routing
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Routes, Route } from "react-router-dom";
-// Import admin-specific components
-import AdminHeader from "./AdminHeader"; // Top navigation and user info
-import AdminSidebar from "./AdminSidebar"; // Left navigation menu
-import AdminDashboard from "./AdminDashboard"; // Main dashboard with overview
-import UserManagement from "./UserManagement"; // User CRUD operations
-import AccessControl from "./AccessControl"; // Module access permissions
-// Import shared footer component from user section
-import Footer from "../user/Footer";
-// Import admin-specific CSS styles
+import AdminHeader from "./AdminHeader";
+import AdminSidebar from "./AdminSidebar";
+import AdminDashboard from "./AdminDashboard";
+import UserManagement from "./UserManagement";
+import AccessControl from "./AccessControl";
+import Footer from "./Footer";
 import "./admin.css";
 
-// Main AdminLayout component - defines the overall structure for admin pages
-// This component acts as a shell that wraps all admin functionality
 export default function AdminLayout() {
+  const [groups, setGroups] = useState([]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await axios.get("/api/groups");
+      setGroups(res.data || []);
+    } catch (err) {
+      console.error("Error fetching groups", err);
+    }
+  };
+
   return (
-    <div className="admin-layout"> {/* Main container with admin-specific styling */}
-      {/* Header Section - contains logo, user info, notifications */}
+    <div className="admin-layout">
       <AdminHeader />
-      
-      {/* Main Content Area - contains sidebar and page content */}
+
       <div className="admin-main">
-        {/* Left Sidebar - navigation menu for admin sections */}
         <AdminSidebar />
-        
-        {/* Content Area - where different admin pages are rendered */}
+
         <div className="admin-content">
-          {/* React Router Routes - defines which component renders for each URL */}
           <Routes>
-            {/* Default route - shows dashboard */}
-            <Route path="/" element={<AdminDashboard />} />
-            {/* Explicit dashboard route */}
-            <Route path="/dashboard" element={<AdminDashboard />} />
-            {/* User management page - add, edit, delete users */}
-            <Route path="/user-management" element={<UserManagement />} />
-            {/* Access control page - manage module permissions */}
-            <Route path="/access-control" element={<AccessControl />} />
+            <Route path="/" element={<AdminDashboard groups={groups} />} />
+            <Route path="/dashboard" element={<AdminDashboard groups={groups} />} />
+            <Route path="/user-management" element={<UserManagement groups={groups} />} />
+            <Route path="/access-control" element={<AccessControl groups={groups} />} />
           </Routes>
         </div>
       </div>
 
-      {/* Footer Section - shared footer component */}
       <Footer />
     </div>
   );

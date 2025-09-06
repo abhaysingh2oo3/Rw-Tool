@@ -393,7 +393,7 @@
 
 .user-management-header {
   display: flex;
-  justify-content: between;
+ justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
 }
@@ -495,19 +495,19 @@
   text-transform: uppercase;
 }
 
-.role-badge.analyst {
-  background: rgba(76, 175, 80, 0.1);
-  color: #4caf50;
+.role-badge.user {
+  background-color: #6c757d; /* gray */
+  color: white;
 }
 
-.role-badge.manager {
-  background: rgba(33, 150, 243, 0.1);
-  color: #2196f3;
+.role-badge.ops {
+  background-color: #28a745; /* green */
+  color: white;
 }
 
 .role-badge.admin {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ff8f00;
+  background-color: #007bff; /* blue */
+  color: white;
 }
 
 .status-badge.active {
@@ -555,7 +555,7 @@
 /* Access Control Styles */
 .access-control-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
@@ -580,7 +580,7 @@
   gap: 20px;
 }
 
-.group-card {
+.stats-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -588,7 +588,7 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.group-card:hover {
+.stats-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }

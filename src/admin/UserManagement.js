@@ -1,124 +1,199 @@
-import React, { useState } from "react";
+// src/admin/UserManagement.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { AddUserModal } from "./Modals";
 import "./admin.css";
 
+/*
+  Simple / human-style User Management page
+  - Fetches users from backend
+  - Create / Update / Delete via axios
+  - Keeps UI minimal (search, role filter, show entries, add button)
+*/
+
 export default function UserManagement() {
+  const [users, setUsers] = useState([]); // from server
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortBy, setSortBy] = useState("Last Active");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Lisa Thompson",
-      email: "lisa.thompson@company.com",
-      role: "analyst",
-      branch: "D",
-      status: "active",
-      lastActive: "1 week ago",
-      avatar: "LT"
-    },
-    {
-      id: 2,
-      name: "Emily Rodriguez",
-      email: "emily.rodriguez@company.com",
-      role: "analyst",
-      branch: "C, 01",
-      status: "inactive",
-      lastActive: "5 days ago",
-      avatar: "ER"
-    },
-    {
-      id: 3,
-      name: "Michael Chen",
-      email: "michael.chen@company.com",
-      role: "manager",
-      branch: "B",
-      status: "active",
-      lastActive: "1 day ago",
-      avatar: "MC"
-    },
-    {
-      id: 4,
-      name: "David Kim",
-      email: "david.kim@company.com",
-      role: "manager",
-      branch: "B",
-      status: "active",
-      lastActive: "3 hours ago",
-      avatar: "DK"
-    },
-    {
-      id: 5,
-      name: "Sarah Wilson",
-      email: "sarah.wilson@company.com",
-      role: "admin",
-      branch: "A, 02",
-      status: "active",
-      lastActive: "2 hours ago",
-      avatar: "SW"
+  const [showModal, setShowModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+
+  // === fetch users on mount ===
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get("/api/users");
+      // expect res.data = [{ id, name, email, role, branch, ... }, ...]
+      // adapt mapping if your backend uses different field names
+      setUsers(
+        (res.data || []).map((u) => ({
+          id: u.id,
+          name: u.name || u.fullName || "",
+          email: u.email || u.emailAddress || "",
+          role: (u.role || "user").toLowerCase(),
+          branch: u.branch || (u.branchAccess ? u.branchAccess.join(", ") : ""),
+          avatar:
+            (u.name || u.fullName || "U")
+              .split(" ")
+              .map((n) => (n ? n[0] : ""))
+              .join("")
+              .toUpperCase() || "U",
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to load users", err);
+      setError("Failed to load users. Check backend or network.");
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }
 
-  const handleAddUser = () => {
-    setShowAddModal(true);
-  };
-
-  const handleSaveUser = (userData) => {
-    const newUser = {
-      id: users.length + 1,
-      name: userData.fullName,
-      email: userData.emailAddress,
-      role: userData.role.toLowerCase(),
-      branch: userData.branchAccess.join(", "),
-      status: "active",
-      lastActive: "Just now",
-      avatar: userData.fullName.split(" ").map(n => n[0]).join("").toUpperCase()
-    };
-    setUsers([...users, newUser]);
-  };
-
-  const handleEditUser = (userId) => {
-    console.log("Edit user:", userId);
-  };
-
-  const handleDeleteUser = (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter(user => user.id !== userId));
+  // === create user (POST) ===
+  async function createUser(data) {
+    // data: { fullName, emailAddress, role, branchAccess }
+    setLoading(true);
+    setError("");
+    try {
+      const payload = {
+        name: data.fullName,
+        email: data.emailAddress,
+        role: data.role,
+        branchAccess: data.branchAccess || [],
+      };
+      const res = await axios.post("/api/users", payload);
+      const u = res.data;
+      // append to list (map backend fields)
+      setUsers((prev) => [
+        ...prev,
+        {
+          id: u.id,
+          name: u.name || u.fullName,
+          email: u.email || u.emailAddress,
+          role: (u.role || "user").toLowerCase(),
+          branch: u.branch || (u.branchAccess ? u.branchAccess.join(", ") : ""),
+          avatar:
+            (u.name || u.fullName || "U")
+              .split(" ")
+              .map((n) => (n ? n[0] : ""))
+              .join("")
+              .toUpperCase() || "U",
+        },
+      ]);
+    } catch (err) {
+      console.error("Create failed", err);
+      setError("Create failed. See console or check backend.");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  // Filter and search functionality
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.role === roleFilter;
-    const matchesStatus = !statusFilter || user.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
+  // === update user (PUT) ===
+  async function updateUser(id, data) {
+    setLoading(true);
+    setError("");
+    try {
+      const payload = {
+        name: data.fullName,
+        email: data.emailAddress,
+        role: data.role,
+        branchAccess: data.branchAccess || [],
+      };
+      const res = await axios.put(`/api/users/${id}`, payload);
+      const u = res.data;
+      setUsers((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+              id: u.id,
+              name: u.name || payload.name,
+              email: u.email || payload.email,
+              role: (u.role || payload.role).toLowerCase(),
+              branch: u.branch || (u.branchAccess ? u.branchAccess.join(", ") : payload.branchAccess.join(", ")),
+              avatar:
+                (u.name || payload.name || "U")
+                  .split(" ")
+                  .map((n) => (n ? n[0] : ""))
+                  .join("")
+                  .toUpperCase() || "U",
+            }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Update failed", err);
+      setError("Update failed. See console or check backend.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // === delete user (DELETE) ===
+  async function deleteUser(id) {
+    if (!window.confirm("Delete this user?")) return;
+    setLoading(true);
+    setError("");
+    try {
+      await axios.delete(`/api/users/${id}`);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      console.error("Delete failed", err);
+      setError("Delete failed. See console or check backend.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // handler wired to modal onSave
+  function handleSaveFromModal(formData) {
+    if (editingUser) {
+      updateUser(editingUser.id, formData);
+    } else {
+      createUser(formData);
+    }
+    setEditingUser(null);
+  }
+
+  // filter + search
+  const filtered = users.filter((u) => {
+    const s = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      !s ||
+      u.name.toLowerCase().includes(s) ||
+      u.email.toLowerCase().includes(s) ||
+      (u.branch || "").toLowerCase().includes(s);
+    const matchesRole = !roleFilter || u.role === roleFilter;
+    return matchesSearch && matchesRole;
   });
 
   return (
     <div className="user-management">
-      {/* Page Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h4 style={{ color: '#212529', fontWeight: '600', margin: 0 }}>User Management</h4>
-        </div>
-        <button className="add-user-btn" onClick={handleAddUser}>
-          <i className="bi bi-plus"></i>
-          Add New User
+        <h4 style={{ margin: 0 }}>User Management</h4>
+        <button
+          className="add-user-btn"
+          onClick={() => {
+            setEditingUser(null);
+            setShowModal(true);
+          }}
+        >
+          <i className="bi bi-plus"></i> Add New User
         </button>
       </div>
 
-      {/* Filters */}
       <div className="user-filters mb-4">
         <div className="row">
-          <div className="col-md-4 mb-3">
+          <div className="col-md-6 mb-3">
             <div className="input-group">
               <span className="input-group-text bg-white border-end-0">
-                <i className="bi bi-search text-muted"></i>
+                <i className="bi bi-search text-muted" />
               </span>
               <input
                 type="text"
@@ -129,65 +204,39 @@ export default function UserManagement() {
               />
             </div>
           </div>
-          <div className="col-md-2 mb-3">
+
+          <div className="col-md-3 mb-3">
             <select
               className="form-select"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
               <option value="">Role</option>
+              <option value="user">User</option>
+              <option value="ops">Ops</option>
               <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="analyst">Analyst</option>
             </select>
-          </div>
-          <div className="col-md-2 mb-3">
-            <select
-              className="form-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <div className="col-md-2 mb-3">
-            <select
-              className="form-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="Last Active">Sort by: Last Active</option>
-              <option value="Name">Sort by: Name</option>
-              <option value="Role">Sort by: Role</option>
-            </select>
-          </div>
-          <div className="col-md-2 mb-3">
-            <div className="d-flex gap-2">
-              <button className="btn btn-outline-primary flex-fill" title="List View">
-                <i className="bi bi-list"></i>
-              </button>
-              <button className="btn btn-outline-primary flex-fill" title="Grid View">
-                <i className="bi bi-grid-3x3-gap"></i>
-              </button>
-            </div>
           </div>
         </div>
+
         <div className="row">
           <div className="col-12">
             <small className="text-muted">
-              Show <select className="form-select form-select-sm d-inline-block" style={{width: 'auto'}}>
+              Show{" "}
+              <select className="form-select form-select-sm d-inline-block" style={{ width: "80px" }}>
                 <option>10</option>
                 <option>25</option>
                 <option>50</option>
-              </select> entries
+              </select>{" "}
+              entries
             </small>
           </div>
         </div>
       </div>
 
-      {/* Users Table */}
+      {error && <div style={{ color: "red", marginBottom: 10 }}>{error}</div>}
+      {loading && <div style={{ color: "#666", marginBottom: 10 }}>Working...</div>}
+
       <div className="users-table">
         <div className="table-responsive">
           <table className="table">
@@ -196,92 +245,83 @@ export default function UserManagement() {
                 <th>USER</th>
                 <th>ROLE</th>
                 <th>ASSIGNED BRANCH</th>
-                <th>STATUS</th>
-                <th>LAST ACTIVE</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
+
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
+              {filtered.map((u) => (
+                <tr key={u.id}>
                   <td>
                     <div className="user-info">
-                      <div className="user-avatar-large">{user.avatar}</div>
+                      <div className="user-avatar-large">{u.avatar}</div>
                       <div className="user-details">
-                        <h6>{user.name}</h6>
-                        <small>{user.email}</small>
+                        <h6 style={{ margin: 0 }}>{u.name}</h6>
+                        <small>{u.email}</small>
                       </div>
                     </div>
                   </td>
+
                   <td>
-                    <span className={`role-badge ${user.role}`}>
-                      {user.role.toUpperCase()}
-                    </span>
+                    <span className={`role-badge ${u.role}`}>{u.role.toUpperCase()}</span>
                   </td>
-                  <td>{user.branch}</td>
-                  <td>
-                    <span className={`status-badge ${user.status}`}>
-                      {user.status === 'active' ? '● Active' : '● Inactive'}
-                    </span>
-                  </td>
-                  <td>{user.lastActive}</td>
+
+                  <td>{u.branch}</td>
+
                   <td>
                     <div className="d-flex gap-1">
                       <button
                         className="action-btn edit"
-                        onClick={() => handleEditUser(user.id)}
                         title="Edit"
+                        onClick={() => {
+                          setEditingUser({
+                            id: u.id,
+                            fullName: u.name,                // match AddUserModal expected prop
+                            emailAddress: u.email,           // match AddUserModal expected prop
+                            role: u.role,
+                            branchAccess: u.branch
+                              ? u.branch.split(",").map(b => b.trim())
+                              : [],                          // convert string to array for modal
+                          });
+                          setShowModal(true);
+                        }}
                       >
                         <i className="bi bi-pencil"></i>
                       </button>
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleDeleteUser(user.id)}
-                        title="Delete"
-                      >
+
+                      <button className="action-btn delete" title="Delete" onClick={() => deleteUser(u.id)}>
                         <i className="bi bi-trash"></i>
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", color: "#666" }}>
+                    No users found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination */}
+
         <div className="d-flex justify-content-between align-items-center p-3 border-top">
-          <small className="text-muted">Showing 1 to 5 of 5 entries</small>
-          <nav>
-            <ul className="pagination pagination-sm mb-0">
-              <li className="page-item">
-                <a href="/" onClick={(e) => e.preventDefault()} className="page-link">
-
-                  <i className="bi bi-chevron-left"></i>
-                </a>
-              </li>
-              <li className="page-item active">
-                <a href="/" onClick={(e) => e.preventDefault()} className="page-link">1</a>
-
-              </li>
-              <li className="page-item">
-                <a href="/" onClick={(e) => e.preventDefault()} className="page-link">
-
-                  <i className="bi bi-chevron-right"></i>
-                </a>
-              </li>
-            </ul>
-          </nav>
+          <small className="text-muted">Showing {filtered.length} of {users.length} entries</small>
         </div>
       </div>
 
-      {/* Add User Modal */}
       <AddUserModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSave={handleSaveUser}
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingUser(null);
+        }}
+        onSave={handleSaveFromModal}
+        defaultData={editingUser}
       />
-
     </div>
   );
 }

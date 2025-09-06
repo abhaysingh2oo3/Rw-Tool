@@ -6,7 +6,6 @@ export default function AdminHeader({
   username = "John Doe",
   lastLogin = "Sunday, August 17, 2025",
   notifications = 3,
-  onOpenNotifications = () => {}
 }) {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -15,17 +14,15 @@ export default function AdminHeader({
   const profileRef = useRef(null);
 
   const handleLogout = () => {
-    navigate("/"); // back to landing page
+    navigate("/");
   };
 
-  // Sample notifications data
   const notificationsList = [
     { id: 1, title: "New user registered", time: "2 minutes ago", type: "info" },
     { id: 2, title: "Report approved", time: "1 hour ago", type: "success" },
     { id: 3, title: "System maintenance scheduled", time: "3 hours ago", type: "warning" }
   ];
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
@@ -179,14 +176,7 @@ export default function AdminHeader({
           )}
         </div>
 
-        {/* Logout */}
-        <button
-          className="notification-btn"
-          onClick={handleLogout}
-          title="Logout"
-        >
-          <i className="bi bi-box-arrow-right"></i>
-        </button>
+     
       </div>
     </header>
   );
