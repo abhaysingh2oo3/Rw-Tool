@@ -1,170 +1,166 @@
 import React, { useState, useEffect } from "react";
 import "./admin.css";
+import axios from "axios";
 
-export function AddUserModal({ isOpen, onClose, onSave, defaultData, groups = [] }) {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    emailAddress: "",
-    role: "user",
-    branchAccess: []
-  });
+export function AddUserModal({ isOpen, onClose, defaultData, groups = [] }) {
+  // form state
+  const [fullName, setFullName] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
+  const [branchAccess, setBranchAccess] = useState([]);
 
+  // if editing → prefill data
   useEffect(() => {
     if (defaultData) {
-      setFormData({
-        fullName: defaultData.name || "",
-        emailAddress: defaultData.email || "",
-        role: defaultData.role || "user",
-        branchAccess: defaultData.branch
+      setFullName(defaultData.name || "");
+      setEmailAddress(defaultData.email || "");
+      setPassword(""); // password stays empty for security
+      setRole(defaultData.role || "user");
+      setBranchAccess(
+        defaultData.branch
           ? defaultData.branch.split(",").map((b) => b.trim())
           : []
-      });
+      );
     }
   }, [defaultData]);
 
-  const handleBranchChange = (branch, isChecked) => {
-    if (isChecked) {
-      setFormData((prev) => ({
-        ...prev,
-        branchAccess: [...prev.branchAccess, branch]
-      }));
+  // handle checkbox clicks
+  const handleBranchChange = (branch, checked) => {
+    if (checked) {
+      setBranchAccess([...branchAccess, branch]);
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        branchAccess: prev.branchAccess.filter((b) => b !== branch)
-      }));
+      setBranchAccess(branchAccess.filter((b) => b !== branch));
     }
   };
 
-  const handleSave = () => {
-    onSave(formData);
-    setFormData({
-      fullName: "",
-      emailAddress: "",
-      role: "user",
-      branchAccess: []
-    });
-    onClose();
+  // handle save button
+  const handleSave = async () => {
+    try {
+      const payload = {
+        name: fullName,
+        email: emailAddress,
+        password: password,
+        role: role,
+        branchAccess: branchAccess
+      };
+
+      // call backend
+      await axios.post("/api/users", payload);
+
+      alert("✅ User created successfully!");
+
+      // reset form
+      setFullName("");
+      setEmailAddress("");
+      setPassword("");
+      setRole("user");
+      setBranchAccess([]);
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to create user. Check backend.");
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" style={overlayStyle}>
-      <div className="modal-content" style={{ ...contentStyle, width: "600px" }}>
-        <div className="modal-header" style={headerStyle}>
-          <h5 style={{ margin: 0, fontWeight: "600" }}>
-            {defaultData ? "Edit User" : "Add New User"}
-          </h5>
-          <button className="btn-close" onClick={onClose} style={closeBtnStyle}>
-            
-          </button>
+    <div style={{ background: "#00000099", position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}>
+      <div style={{ background: "#fff", margin: "50px auto", padding: "20px", width: "600px", borderRadius: "6px" }}>
+        <h4>{defaultData ? "Edit User" : "Add New User"}</h4>
+
+        {/* Full Name */}
+        <div className="mb-3">
+          <label>Full Name</label>
+          <input
+            type="text"
+            className="form-control"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
         </div>
 
-        <div className="modal-body" style={{ padding: "20px" }}>
-          <div className="row">
-            {/* Left side form fields */}
-            <div className="col-md-6">
-              <div className="form-group mb-3">
-                <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter full name"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, fullName: e.target.value }))
-                  }
-                />
-              </div>
+        {/* Email */}
+        <div className="mb-3">
+          <label>Email Address</label>
+          <input
+            type="email"
+            className="form-control"
+            value={emailAddress}
+            onChange={(e) => setEmailAddress(e.target.value)}
+          />
+        </div>
 
-              <div className="form-group mb-3">
-                <label className="form-label">Email Address</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Enter email address"
-                  value={formData.emailAddress}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      emailAddress: e.target.value
-                    }))
-                  }
-                />
-              </div>
+        {/* Password */}
+        <div className="mb-3">
+          <label>Password</label>
+          <input
+            type="password"
+            className="form-control"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-              <div className="form-group mb-3">
-                <label className="form-label">Role</label>
-                <select
-                  className="form-select"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, role: e.target.value }))
-                  }
-                >
-                  <option value="user">User</option>
-                  <option value="ops">Ops</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
+        {/* Role */}
+        <div className="mb-3">
+          <label>Role</label>
+          <select
+            className="form-select"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="user">User</option>
+            <option value="ops">Ops</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
 
-            {/* Right side: Folder access */}
-            <div className="col-md-6">
-              <label className="form-label">Folder Access</label>
-              <div style={branchBoxStyle}>
-                {groups.map((group) => (
-                  <div key={group.id} className="mb-2">
-                    {/* Main Folder */}
-                    <div className="form-check">
+        {/* Folder Access */}
+        <div className="mb-3">
+          <label>Folder Access</label>
+          <div style={{ border: "1px solid #ccc", padding: "10px" }}>
+            {groups.map((group) => (
+              <div key={group.id} className="mb-2">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id={`main-${group.id}`}
+                    checked={branchAccess.includes(group.name)}
+                    onChange={(e) => handleBranchChange(group.name, e.target.checked)}
+                  />
+                  <label className="form-check-label fw-bold" htmlFor={`main-${group.id}`}>
+                    {group.name}
+                  </label>
+                </div>
+
+                {/* Sub Folders */}
+                {group.subFolders &&
+                  group.subFolders.map((sub) => (
+                    <div key={sub.id} className="form-check ms-3">
                       <input
-                        className="form-check-input"
                         type="checkbox"
-                        id={`main-${group.id}`}
-                        checked={formData.branchAccess.includes(group.name)}
-                        onChange={(e) =>
-                          handleBranchChange(group.name, e.target.checked)
-                        }
+                        className="form-check-input"
+                        id={`sub-${sub.id}`}
+                        checked={branchAccess.includes(sub.name)}
+                        onChange={(e) => handleBranchChange(sub.name, e.target.checked)}
                       />
-                      <label
-                        className="form-check-label fw-bold"
-                        htmlFor={`main-${group.id}`}
-                      >
-                        {group.name}
+                      <label className="form-check-label" htmlFor={`sub-${sub.id}`}>
+                        {sub.name}
                       </label>
                     </div>
-
-                    {/* Sub Folders */}
-                    {group.subFolders &&
-                      group.subFolders.map((sub) => (
-                        <div key={sub.id} className="form-check ms-3">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id={`sub-${sub.id}`}
-                            checked={formData.branchAccess.includes(sub.name)}
-                            onChange={(e) =>
-                              handleBranchChange(sub.name, e.target.checked)
-                            }
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor={`sub-${sub.id}`}
-                          >
-                            {sub.name}
-                          </label>
-                        </div>
-                      ))}
-                  </div>
-                ))}
+                  ))}
               </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="modal-footer" style={footerStyle}>
-          <button className="btn btn-secondary me-2" onClick={onClose}>
+        {/* Buttons */}
+        <div className="d-flex justify-content-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
